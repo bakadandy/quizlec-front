@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: 'Lato', ui-sans-serif, system-ui, sans-serif;
+  background: #f7f9fc;
+  color: #1c1d1f;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+}
