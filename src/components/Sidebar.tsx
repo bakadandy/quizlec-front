@@ -38,7 +38,7 @@ export default function Sidebar() {
         ))}
       </nav>
       <div className="px-6 py-4 border-t border-white/10 text-xs text-white/30">
-        v0.1 · localhost:8080
+        v0.1 · localhost:5173
       </div>
     </aside>
   );

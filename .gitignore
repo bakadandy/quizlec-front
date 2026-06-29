@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# design-sync — generated/cached, not source
+.ds-sync/
+ds-bundle/
+dist/types/
+.design-sync/.cache/
+.design-sync/learnings/

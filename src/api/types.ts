@@ -1,14 +1,23 @@
 export interface Role {
   id: number;
-  name: string;
+  roleName: string;
+}
+
+export interface Activation {
+  id: number;
+  uuid: string;
+  activated: boolean;
 }
 
 export interface User {
   id: number;
   username: string;
   email: string;
+  password?: string;
   createdAt: string;
+  updatedAt?: string;
   roles?: Role[];
+  activation?: Activation | null;
 }
 
 export interface AnswerOption {
@@ -68,17 +77,21 @@ export interface Lecture {
 export interface TestDto {
   title: string;
   description?: string;
+  createdBy: number;
 }
 
 export interface QuestionDto {
-  text: string;
   testId: number;
+  questionText: string;
+  questionType: string;
+  orderIndex: number;
 }
 
 export interface AnswerOptionsDto {
-  text: string;
-  correct: boolean;
   questionId: number;
+  optionText: string;
+  isCorrect: boolean;
+  orderIndex: number;
 }
 
 export interface SubmissionAnswersDto {

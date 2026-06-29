@@ -14,14 +14,18 @@ function UserForm({ initial, onSave, onCancel }: {
 }) {
   const [username, setUsername] = useState(initial?.username ?? '');
   const [email, setEmail] = useState(initial?.email ?? '');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!username.trim() || !email.trim()) return setError('Username and email are required');
+    if (!initial && !password.trim()) return setError('Password is required');
     setLoading(true); setError('');
-    try { await onSave({ username: username.trim(), email: email.trim() }); }
+    const payload: Partial<User> = { username: username.trim(), email: email.trim() };
+    if (password.trim()) payload.password = password.trim();
+    try { await onSave(payload); }
     catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed'); }
     finally { setLoading(false); }
   }
@@ -31,6 +35,13 @@ function UserForm({ initial, onSave, onCancel }: {
       {error && <ErrorBanner message={error} />}
       <Input label="Username" value={username} onChange={e => setUsername(e.target.value)} placeholder="john_doe" />
       <Input label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="john@example.com" />
+      <Input
+        label={initial ? 'New Password (leave blank to keep)' : 'Password'}
+        type="password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder="••••••••"
+      />
       <div className="flex gap-3">
         <Button type="submit" loading={loading}>Save</Button>
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
@@ -66,7 +77,7 @@ function AssignRoleForm({ roleList, onSave, onCancel }: {
           onChange={e => setRoleId(Number(e.target.value))}
           className="px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#1865f2]"
         >
-          {roleList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {roleList.map(r => <option key={r.id} value={r.id}>{r.roleName}</option>)}
         </select>
       </div>
       <div className="flex gap-3">
@@ -80,17 +91,19 @@ function AssignRoleForm({ roleList, onSave, onCancel }: {
 export default function Users() {
   const [list, setList] = useState<User[]>([]);
   const [roleList, setRoleList] = useState<Role[]>([]);
-  const [activation, setActivation] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [error] = useState('');
+  const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [assigningRole, setAssigningRole] = useState<User | null>(null);
 
   useEffect(() => {
-    // No GET /users list endpoint — show created users tracked locally
-    roles.list().then(setRoleList).catch(() => {});
-    setLoading(false);
+    Promise.all([
+      users.list().then(setList),
+      roles.list().then(setRoleList).catch(() => {}),
+    ])
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleCreate(d: Partial<User>) {
@@ -113,20 +126,30 @@ export default function Users() {
   }
 
   async function toggleActivation(user: User) {
-    const isActive = activation[user.id] ?? false;
-    // NOTE: deactivate returns wrong body value — use HTTP 200 as success signal
+    const isActive = user.activation?.activated ?? false;
+    // NOTE: deactivate returns wrong body value — trust HTTP 200 as success
     if (isActive) {
       await users.deactivate(user.id);
-      setActivation(a => ({ ...a, [user.id]: false }));
+      setList(l => l.map(u => u.id === user.id
+        ? { ...u, activation: u.activation ? { ...u.activation, activated: false } : null }
+        : u));
     } else {
       await users.activate(user.id);
-      setActivation(a => ({ ...a, [user.id]: true }));
+      setList(l => l.map(u => u.id === user.id
+        ? { ...u, activation: u.activation ? { ...u.activation, activated: true } : { id: 0, uuid: '', activated: true } }
+        : u));
     }
   }
 
   async function handleAssignRole(roleId: number) {
     if (!assigningRole) return;
     await users.assignRole(assigningRole.id, roleId);
+    const role = roleList.find(r => r.id === roleId);
+    if (role) {
+      setList(l => l.map(u => u.id === assigningRole.id
+        ? { ...u, roles: [...(u.roles ?? []), role] }
+        : u));
+    }
     setAssigningRole(null);
   }
 
@@ -142,7 +165,7 @@ export default function Users() {
 
       {error && <ErrorBanner message={error} />}
 
-      {list.length === 0 ? (
+      {list.length === 0 && !error ? (
         <Card>
           <EmptyState
             icon={<UsersIcon size={48} />}
@@ -153,7 +176,7 @@ export default function Users() {
       ) : (
         <div className="space-y-3">
           {list.map(user => {
-            const active = activation[user.id] ?? false;
+            const active = user.activation?.activated ?? false;
             return (
               <Card key={user.id} className="p-4">
                 <div className="flex items-center justify-between">
@@ -162,10 +185,10 @@ export default function Users() {
                       {user.username?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm text-[#1c1d1f]">{user.username}</span>
                         <Badge color={active ? 'green' : 'gray'}>{active ? 'Active' : 'Inactive'}</Badge>
-                        {user.roles?.map(r => <Badge key={r.id} color="blue">{r.name}</Badge>)}
+                        {user.roles?.map(r => <Badge key={r.id} color="blue">{r.roleName}</Badge>)}
                       </div>
                       <span className="text-xs text-gray-500">{user.email}</span>
                     </div>

@@ -1,0 +1,17 @@
+{
+  "pkg": "quizlec-front",
+  "globalName": "QuizLec",
+  "shape": "package",
+  "projectId": "0099c16b-bd97-49f1-8ba8-a77809d23029",
+  "srcDir": "src/components",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": "dist/assets/index-BAf-kuE2.css",
+  "buildCmd": "npx tsc --project tsconfig.dts.json && node .ds-sync/package-build.mjs --config design-sync.config.json --node-modules ./node_modules --entry ./src/components/ui.tsx --out ./ds-bundle",
+  "runtimeFontPrefixes": ["Lato"],
+  "componentSrcMap": {
+    "Sidebar": null
+  },
+  "overrides": {
+    "Modal": { "cardMode": "single", "viewport": "700x500" }
+  }
+}

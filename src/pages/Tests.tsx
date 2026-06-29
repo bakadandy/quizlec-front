@@ -67,11 +67,23 @@ function QuestionForm({ testId, onSave, onCancel }: {
     if (options.filter(o => o.text.trim()).length < 2) return setError('At least 2 answer options required');
     setLoading(true); setError('');
     try {
-      const q = await questions.create({ text: text.trim(), testId });
+      const q = await questions.create({
+        testId,
+        questionText: text.trim(),
+        questionType: 'SINGLE_CHOICE',
+        orderIndex: 0,
+      });
       // create answer options sequentially
       const opts: AnswerOption[] = [];
-      for (const opt of options.filter(o => o.text.trim())) {
-        const ao = await answerOptions.create({ text: opt.text.trim(), correct: opt.correct, questionId: q.id });
+      const filtered = options.filter(o => o.text.trim());
+      for (let i = 0; i < filtered.length; i++) {
+        const opt = filtered[i];
+        const ao = await answerOptions.create({
+          questionId: q.id,
+          optionText: opt.text.trim(),
+          isCorrect: opt.correct,
+          orderIndex: i,
+        });
         opts.push(ao);
       }
       onSave({ ...q, answerOptions: opts });
@@ -300,7 +312,7 @@ export default function Tests() {
   }, []);
 
   async function handleCreate(d: { title: string; description: string }) {
-    const created = await tests.create(d);
+    const created = await tests.create({ ...d, createdBy: 1 });
     setList(l => [...l, { ...created, questions: [] }]);
     setShowCreate(false);
   }

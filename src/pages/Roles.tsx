@@ -12,7 +12,7 @@ function RoleForm({ initial, onSave, onCancel }: {
   onSave: (d: Partial<Role>) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [name, setName] = useState(initial?.name ?? '');
+  const [name, setName] = useState(initial?.roleName ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,7 +20,7 @@ function RoleForm({ initial, onSave, onCancel }: {
     e.preventDefault();
     if (!name.trim()) return setError('Name is required');
     setLoading(true); setError('');
-    try { await onSave({ name: name.trim() }); }
+    try { await onSave({ roleName: name.trim() }); }
     catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed'); }
     finally { setLoading(false); }
   }
@@ -99,7 +99,7 @@ export default function Roles() {
             <Card key={role.id} className="p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <Badge color={roleColors[role.name.toUpperCase()] ?? 'gray'}>{role.name}</Badge>
+                  <Badge color={roleColors[role.roleName.toUpperCase()] ?? 'gray'}>{role.roleName}</Badge>
                   <p className="text-xs text-gray-400 mt-2">ID: {role.id}</p>
                 </div>
                 <div className="flex gap-1">

@@ -7,6 +7,7 @@ import type {
 
 // Users
 export const users = {
+  list: () => api.get<User[]>('/users'),
   isActivated: (id: number) => api.get<boolean>(`/users/is_activated/${id}`),
   create: (body: Partial<User>) => api.post<User>('/users', body),
   update: (id: number, body: Partial<User>) => api.put<User>(`/users/${id}`, body),
