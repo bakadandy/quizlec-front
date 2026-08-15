@@ -29,3 +29,7 @@ ds-bundle/
 dist/types/
 .design-sync/.cache/
 .design-sync/learnings/
+
+./claude
+./design-sync
+CLAUDE.md
